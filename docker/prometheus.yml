@@ -1,0 +1,39 @@
+# Prometheus configuration for AgentShield — Phase 1 (Foundation)
+#
+# At this stage:
+# - Only the basic gateway exists (health checks only)
+# - No custom metrics endpoint yet (/metrics comes in Phase 7)
+# - Prometheus monitors itself for verification
+#
+# Later phases will add:
+# - Gateway metrics scraping (Phase 7)
+# - Database/cache/queue exporters
+# - Alert rules
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'agentshield'
+    environment: 'development'
+
+scrape_configs:
+  # Prometheus self-monitoring (proves the stack is alive)
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+          component: 'monitoring'
+
+  # AgentShield Gateway — health only for now
+  # Will switch to /metrics in Phase 7
+  - job_name: 'agentshield-gateway-health'
+    static_configs:
+      - targets: ['gateway:8000']
+        labels:
+          service: 'gateway'
+          component: 'security'
+    metrics_path: '/health'
+    scheme: 'http'
+    scrape_interval: 30s
