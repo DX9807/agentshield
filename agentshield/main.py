@@ -125,6 +125,10 @@ app.include_router(
     prefix=settings.API_PREFIX,
     tags=["Health"],
 )
+app.include_router(
+    health.router,
+    tags=["Health"],
+)
 
 
 # Root endpoint

@@ -14,9 +14,11 @@ services:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - OPENSEARCH_HOSTS=http://opensearch:9200
       - LOG_LEVEL=DEBUG
+      - PYTHONPATH=/app
     volumes:
       - ./agentshield:/app/agentshield
       - ./alembic:/app/alembic
+      - ./alembic.ini:/app/alembic.ini
     depends_on:
       postgres:
         condition: service_healthy
