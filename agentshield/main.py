@@ -1,19 +1,21 @@
 """AgentShield FastAPI application entry point."""
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-import uvicorn
 from datetime import datetime
 
+import uvicorn
+from fastapi import FastAPI, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
+
+from .api.v1 import agents, capabilities, health
 from .core.config import settings
-from .core.logging import setup_logging, get_logger
 from .core.exceptions import AgentShieldError
-from .infrastructure.database.session import db_manager
+from .core.logging import get_logger, setup_logging
+from .domain.agent import models as agent_models  # noqa: F401
 from .infrastructure.cache.redis_client import redis_client
-from .api.v1 import health
+from .infrastructure.database.session import db_manager
 
 # Setup logging
 setup_logging()
@@ -26,7 +28,7 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     logger.info(f"Environment: {settings.APP_ENV}")
-    
+
     # Initialize database
     try:
         await db_manager.create_tables()
@@ -34,7 +36,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Database initialization failed: {e}")
         raise
-    
+
     # Connect to Redis
     try:
         await redis_client.connect()
@@ -42,18 +44,18 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Redis connection failed: {e}")
         # Continue without Redis (non-critical for startup)
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down...")
-    
+
     # Disconnect Redis
     await redis_client.disconnect()
-    
+
     # Dispose database connections
     await db_manager.dispose()
-    
+
     logger.info("Shutdown complete")
 
 
@@ -128,6 +130,14 @@ app.include_router(
 app.include_router(
     health.router,
     tags=["Health"],
+)
+app.include_router(
+    agents.router,
+    prefix=settings.API_PREFIX,
+)
+app.include_router(
+    capabilities.router,
+    prefix=settings.API_PREFIX,
 )
 
 

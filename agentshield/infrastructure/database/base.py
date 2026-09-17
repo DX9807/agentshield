@@ -1,16 +1,13 @@
 """Database base models and configuration."""
 
 from datetime import datetime
-from typing import Any
 from uuid import uuid4
+
 from sqlalchemy import (
     Column,
     DateTime,
     String,
     func,
-    event,
-    orm,
-    Index,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
@@ -21,9 +18,9 @@ Base = declarative_base()
 
 class BaseModel(Base):
     """Base model with common fields."""
-    
+
     __abstract__ = True
-    
+
     id = Column(
         UUID(as_uuid=True),
         primary_key=True,
@@ -43,12 +40,12 @@ class BaseModel(Base):
         nullable=False,
         doc="Last update timestamp",
     )
-    
+
     @declared_attr
-    def __tablename__(cls) -> str:
+    def __tablename__(cls) -> str:  # noqa: N805
         """Generate table name from class name."""
         return cls.__name__.lower()
-    
+
     def to_dict(self) -> dict:
         """Convert model to dictionary."""
         result = {}
@@ -60,7 +57,7 @@ class BaseModel(Base):
                 value = str(value)
             result[column.name] = value
         return result
-    
+
     def __repr__(self) -> str:
         """String representation."""
         return f"<{self.__class__.__name__} id={self.id}>"
@@ -69,7 +66,7 @@ class BaseModel(Base):
 # Custom types
 class AutoTimestamp:
     """Mixin for automatic timestamps."""
-    
+
     created_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -86,6 +83,6 @@ class AutoTimestamp:
 # Audit mixin
 class AuditMixin:
     """Mixin for audit fields."""
-    
+
     created_by = Column(String(255), nullable=True)
     updated_by = Column(String(255), nullable=True)

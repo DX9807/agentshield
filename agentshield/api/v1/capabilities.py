@@ -1,18 +1,19 @@
 """Capability API endpoints."""
 
-from typing import Optional
-from fastapi import APIRouter, Depends, status, Query
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...core.auth import get_current_user
 from ...core.exceptions import CapabilityNotFoundError
-from ...infrastructure.database.session import get_db
 from ...domain.agent.service import AgentService
+from ...infrastructure.database.session import get_db
 from ...schemas.capability import (
     CapabilityCreate,
-    CapabilityResponse,
     CapabilityListResponse,
+    CapabilityResponse,
 )
-from ...core.auth import get_current_user
 
 router = APIRouter(prefix="/capabilities", tags=["Capabilities"])
 
@@ -26,7 +27,7 @@ async def create_capability(
     """Create a new capability."""
     service = await AgentService.create(session)
     capability = await service.create_capability(capability_data)
-    
+
     return CapabilityResponse(
         id=capability.id,
         name=capability.name,
@@ -40,14 +41,14 @@ async def create_capability(
 
 @router.get("/", response_model=CapabilityListResponse)
 async def list_capabilities(
-    category: Optional[str] = None,
+    category: str | None = None,
     session: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     """List all capabilities."""
     service = await AgentService.create(session)
     capabilities, total = await service.list_capabilities(category=category)
-    
+
     items = [
         CapabilityResponse(
             id=cap.id,
@@ -60,7 +61,7 @@ async def list_capabilities(
         )
         for cap in capabilities
     ]
-    
+
     return CapabilityListResponse(items=items, total=total)
 
 
@@ -72,11 +73,16 @@ async def get_capability(
 ):
     """Get capability by ID."""
     service = await AgentService.create(session)
-    capability = await service._get_capability_by_id(capability_id)
-    
+    capability = None
+    try:
+        cap_uuid = UUID(capability_id)
+        capability = await service.get_capability_by_id(cap_uuid)
+    except ValueError:
+        capability = await service.get_capability_by_name(capability_id)
+
     if not capability:
         raise CapabilityNotFoundError(str(capability_id))
-    
+
     return CapabilityResponse(
         id=capability.id,
         name=capability.name,

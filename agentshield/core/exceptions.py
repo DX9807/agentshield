@@ -1,17 +1,17 @@
 """Custom exceptions for AgentShield."""
 
-from typing import Optional, Any, Dict
+from typing import Any
 
 
 class AgentShieldError(Exception):
     """Base exception for AgentShield."""
-    
+
     def __init__(
         self,
         message: str = "An error occurred",
         code: str = "INTERNAL_ERROR",
         status_code: int = 500,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         self.message = message
         self.code = code
@@ -23,7 +23,7 @@ class AgentShieldError(Exception):
 # Identity errors
 class AgentNotFoundError(AgentShieldError):
     """Agent not found."""
-    
+
     def __init__(self, agent_id: str):
         super().__init__(
             message=f"Agent not found: {agent_id}",
@@ -35,7 +35,7 @@ class AgentNotFoundError(AgentShieldError):
 
 class AgentInactiveError(AgentShieldError):
     """Agent is inactive."""
-    
+
     def __init__(self, agent_id: str):
         super().__init__(
             message=f"Agent is inactive: {agent_id}",
@@ -47,7 +47,7 @@ class AgentInactiveError(AgentShieldError):
 
 class InvalidCredentialsError(AgentShieldError):
     """Invalid credentials."""
-    
+
     def __init__(self):
         super().__init__(
             message="Invalid credentials",
@@ -59,7 +59,7 @@ class InvalidCredentialsError(AgentShieldError):
 # Task errors
 class TaskNotFoundError(AgentShieldError):
     """Task not found."""
-    
+
     def __init__(self, task_id: str):
         super().__init__(
             message=f"Task not found: {task_id}",
@@ -71,7 +71,7 @@ class TaskNotFoundError(AgentShieldError):
 
 class TaskExpiredError(AgentShieldError):
     """Task has expired."""
-    
+
     def __init__(self, task_id: str):
         super().__init__(
             message=f"Task has expired: {task_id}",
@@ -84,7 +84,7 @@ class TaskExpiredError(AgentShieldError):
 # Policy errors
 class PolicyNotFoundError(AgentShieldError):
     """Policy not found."""
-    
+
     def __init__(self, policy_id: str):
         super().__init__(
             message=f"Policy not found: {policy_id}",
@@ -96,8 +96,8 @@ class PolicyNotFoundError(AgentShieldError):
 
 class PolicyEvaluationError(AgentShieldError):
     """Error evaluating policy."""
-    
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         super().__init__(
             message=message,
             code="POLICY_EVALUATION_ERROR",
@@ -109,8 +109,8 @@ class PolicyEvaluationError(AgentShieldError):
 # Gateway errors
 class GatewayError(AgentShieldError):
     """Gateway error."""
-    
-    def __init__(self, message: str, status_code: int = 502, details: Optional[Dict[str, Any]] = None):
+
+    def __init__(self, message: str, status_code: int = 502, details: dict[str, Any] | None = None):
         super().__init__(
             message=message,
             code="GATEWAY_ERROR",
@@ -121,8 +121,8 @@ class GatewayError(AgentShieldError):
 
 class BlockedRequestError(AgentShieldError):
     """Request blocked by security policy."""
-    
-    def __init__(self, reason: str, risk_score: int, details: Optional[Dict[str, Any]] = None):
+
+    def __init__(self, reason: str, risk_score: int, details: dict[str, Any] | None = None):
         super().__init__(
             message=f"Request blocked: {reason}",
             code="BLOCKED_REQUEST",
@@ -138,7 +138,7 @@ class BlockedRequestError(AgentShieldError):
 # Capability errors
 class CapabilityNotFoundError(AgentShieldError):
     """Capability not found."""
-    
+
     def __init__(self, capability_id: str):
         super().__init__(
             message=f"Capability not found: {capability_id}",
@@ -150,7 +150,7 @@ class CapabilityNotFoundError(AgentShieldError):
 
 class InsufficientCapabilitiesError(AgentShieldError):
     """Agent lacks required capability."""
-    
+
     def __init__(self, required_capability: str):
         super().__init__(
             message=f"Agent lacks required capability: {required_capability}",
@@ -163,7 +163,7 @@ class InsufficientCapabilitiesError(AgentShieldError):
 # Data security errors
 class SensitiveDataError(AgentShieldError):
     """Sensitive data detected."""
-    
+
     def __init__(self, classification: str, patterns: list):
         super().__init__(
             message=f"Sensitive data detected: {classification}",
