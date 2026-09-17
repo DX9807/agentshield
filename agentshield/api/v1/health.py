@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, status
 from typing import Dict, Any
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime
 from ...infrastructure.database.session import get_db
 from ...infrastructure.cache.redis_client import redis_client
 from ...core.config import settings
