@@ -1,4 +1,6 @@
-"""AgentShield FastAPI application entry point."""
+"""
+AgentShield FastAPI application entry point.
+"""
 
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -9,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 
-from .api.v1 import agents, capabilities, health
+from .api.v1 import agents, capabilities, health,tasks
 from .core.config import settings
 from .core.exceptions import AgentShieldError
 from .core.logging import get_logger, setup_logging
@@ -24,7 +26,9 @@ logger = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan context manager for startup and shutdown."""
+    """
+    Lifespan context manager for startup and shutdown.
+    """
     # Startup
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     logger.info(f"Environment: {settings.APP_ENV}")
@@ -87,7 +91,9 @@ app.add_middleware(
 # Exception handlers
 @app.exception_handler(AgentShieldError)
 async def agentshield_exception_handler(request: Request, exc: AgentShieldError):
-    """Handle AgentShield-specific exceptions."""
+    """
+    Handle AgentShield-specific exceptions.
+    """
     logger.warning(
         f"AgentShield error: {exc.code} - {exc.message}",
         extra={
@@ -109,7 +115,9 @@ async def agentshield_exception_handler(request: Request, exc: AgentShieldError)
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
-    """Handle generic exceptions."""
+    """
+    Handle generic exceptions.
+    """
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -140,11 +148,18 @@ app.include_router(
     prefix=settings.API_PREFIX,
 )
 
+app.include_router(
+    tasks.router,
+    prefix=settings.API_PREFIX,
+)
+
 
 # Root endpoint
 @app.get("/")
 async def root():
-    """Root endpoint."""
+    """
+    Root endpoint.
+    """
     return {
         "service": settings.APP_NAME,
         "version": settings.APP_VERSION,
@@ -154,7 +169,9 @@ async def root():
 
 
 def main():
-    """Entry point for running the application."""
+    """
+    Entry point for running the application.
+    """
     uvicorn.run(
         "agentshield.main:app",
         host="0.0.0.0",
