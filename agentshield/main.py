@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 
-from .api.v1 import agents, capabilities, health, tasks
+from .api.v1 import agents, capabilities, health, tasks, policies
 from .core.config import settings
 from .core.exceptions import AgentShieldError
 from .core.logging import get_logger, setup_logging
@@ -151,6 +151,11 @@ app.include_router(
 
 app.include_router(
     tasks.router,
+    prefix=settings.API_PREFIX,
+)
+
+app.include_router(
+    policies.router,
     prefix=settings.API_PREFIX,
 )
 
