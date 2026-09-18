@@ -1,26 +1,27 @@
 """Task schemas for API requests/responses."""
 
-from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any
+from datetime import datetime
+from typing import Any
 from uuid import UUID
-from pydantic import BaseModel, Field, ConfigDict, validator
 
-from ..domain.task.models import TaskStatus, TaskPriority
+from pydantic import BaseModel, ConfigDict, Field
+
+from ..domain.task.models import TaskPriority, TaskStatus
 
 
 class TaskCreate(BaseModel):
     """Schema for creating a task."""
-    
+
     agent_id: UUID
     user_id: str = Field(..., min_length=1, max_length=255)
-    external_id: Optional[str] = None
+    external_id: str | None = None
     intent_type: str = Field(..., min_length=1, max_length=100)
-    intent_data: Optional[Dict[str, Any]] = None
-    context: Optional[Dict[str, Any]] = None
+    intent_data: dict[str, Any] | None = None
+    context: dict[str, Any] | None = None
     priority: TaskPriority = TaskPriority.MEDIUM
     expires_in_minutes: int = Field(60, ge=1, le=1440)  # 1 minute to 24 hours
-    capabilities: Optional[List[str]] = None  # Capability names to assign
-    
+    capabilities: list[str] | None = None  # Capability names to assign
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -32,7 +33,7 @@ class TaskCreate(BaseModel):
                 "context": {"customer_id": "CUST-456", "region": "US"},
                 "priority": "high",
                 "expires_in_minutes": 120,
-                "capabilities": ["read_customer", "read_order", "create_refund"]
+                "capabilities": ["read_customer", "read_order", "create_refund"],
             }
         }
     )
@@ -40,17 +41,17 @@ class TaskCreate(BaseModel):
 
 class TaskUpdate(BaseModel):
     """Schema for updating a task."""
-    
-    priority: Optional[TaskPriority] = None
-    context: Optional[Dict[str, Any]] = None
-    expires_in_minutes: Optional[int] = Field(None, ge=1, le=1440)
-    
+
+    priority: TaskPriority | None = None
+    context: dict[str, Any] | None = None
+    expires_in_minutes: int | None = Field(None, ge=1, le=1440)
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
                 "priority": "critical",
                 "context": {"customer_id": "CUST-789"},
-                "expires_in_minutes": 180
+                "expires_in_minutes": 180,
             }
         }
     )
@@ -58,48 +59,50 @@ class TaskUpdate(BaseModel):
 
 class TaskResponse(BaseModel):
     """Schema for task response."""
-    
+
     id: UUID
     agent_id: UUID
     user_id: str
-    external_id: Optional[str]
+    external_id: str | None = None
     intent_type: str
-    intent_data: Optional[Dict[str, Any]]
-    context: Optional[Dict[str, Any]]
+    intent_data: dict[str, Any] | None = None
+    context: dict[str, Any] | None = None
     status: TaskStatus
     priority: TaskPriority
     expires_at: datetime
     created_at: datetime
     updated_at: datetime
-    completed_at: Optional[datetime]
-    created_by: Optional[str]
-    updated_by: Optional[str]
-    
+    completed_at: datetime | None = None
+    created_by: str | None = None
+    updated_by: str | None = None
+
     # Relationships
-    capabilities: List[str] = Field(default_factory=list)
-    is_active: bool
-    
+    capabilities: list[str] = Field(default_factory=list)
+    is_active: bool = True
+
     model_config = ConfigDict(from_attributes=True)
 
 
 class TaskListResponse(BaseModel):
     """Response for listing tasks."""
-    
-    items: List[TaskResponse]
+
+    items: list[TaskResponse]
     total: int
     page: int = 1
     limit: int = 20
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class TaskCompleteRequest(BaseModel):
     """Schema for completing a task."""
-    
-    result_data: Optional[Dict[str, Any]] = None
-    
+
+    result_data: dict[str, Any] | None = None
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "result_data": {"refund_id": "REF-789", "amount": 50.00}
+                "result_data": {"refund_id": "REF-789", "amount": 50.00},
             }
         }
     )
@@ -107,15 +110,15 @@ class TaskCompleteRequest(BaseModel):
 
 class TaskExtendRequest(BaseModel):
     """Schema for extending a task."""
-    
+
     additional_minutes: int = Field(..., ge=1, le=1440)
-    reason: Optional[str] = None
-    
+    reason: str | None = None
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
                 "additional_minutes": 60,
-                "reason": "Need more time for investigation"
+                "reason": "Need more time for investigation",
             }
         }
     )

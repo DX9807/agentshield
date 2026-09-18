@@ -1,14 +1,15 @@
 """Unit tests for agent and capability Pydantic schemas."""
 
 from uuid import uuid4
+
 import pytest
 from pydantic import ValidationError
 
 from agentshield.domain.agent.models import AgentEnvironment, AgentRiskLevel, AgentStatus
 from agentshield.schemas.agent import (
     AgentCreate,
-    AgentUpdate,
     AgentTokenRequest,
+    AgentUpdate,
 )
 from agentshield.schemas.capability import CapabilityCreate
 
@@ -79,4 +80,3 @@ class TestSchemas:
                 agent_id=uuid4(),
                 api_key="short",  # min_length=10
             )
-

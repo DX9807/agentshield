@@ -1,13 +1,13 @@
 """Unit tests for agent domain models."""
 
 from uuid import uuid4
+
 from agentshield.domain.agent.models import (
     Agent,
     AgentCredential,
     AgentEnvironment,
     AgentRiskLevel,
     AgentStatus,
-    Capability,
     PredefinedCapabilities,
 )
 
@@ -90,4 +90,3 @@ class TestAgentModels:
         assert PredefinedCapabilities.ACCESS_PAYROLL in sensitive_caps
         assert PredefinedCapabilities.DELETE_CUSTOMER in sensitive_caps
         assert PredefinedCapabilities.READ_CUSTOMER not in sensitive_caps
-

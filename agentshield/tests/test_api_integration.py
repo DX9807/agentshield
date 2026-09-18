@@ -1,7 +1,7 @@
 """Integration tests for AgentShield Phase 2 endpoints."""
 
-import pytest
 import httpx
+import pytest
 
 
 @pytest.mark.asyncio
@@ -113,4 +113,3 @@ async def test_agent_lifecycle() -> None:
         # Verify status is inactive
         get_res_4 = await client.get(f"/api/v1/agents/{agent_id}")
         assert get_res_4.json()["status"] == "inactive"
-

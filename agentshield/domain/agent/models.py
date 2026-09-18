@@ -75,7 +75,7 @@ class Agent(BaseModel, AuditMixin):
     capabilities = relationship(
         "AgentCapability", back_populates="agent", cascade="all, delete-orphan"
     )
-    # tasks = relationship("Task", back_populates="agent")  # Reserved for future phase
+    tasks = relationship("Task", back_populates="agent")
 
     @hybrid_property
     def is_active(self) -> bool:

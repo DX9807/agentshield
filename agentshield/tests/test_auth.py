@@ -1,6 +1,7 @@
 """Unit tests for authentication module."""
 
 from uuid import uuid4
+
 import pytest
 from fastapi import HTTPException
 
@@ -11,7 +12,6 @@ from agentshield.core.auth import (
     get_current_user,
     require_admin,
 )
-from agentshield.core.exceptions import InvalidCredentialsError
 
 
 class TestAuth:
@@ -81,4 +81,3 @@ class TestAuth:
         with pytest.raises(HTTPException) as exc_info:
             await require_admin(non_admin)
         assert exc_info.value.status_code == 403
-
