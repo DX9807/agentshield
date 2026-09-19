@@ -2,6 +2,7 @@
 
 import secrets
 from uuid import uuid4
+
 import httpx
 import pytest
 
@@ -153,4 +154,3 @@ async def test_task_not_found_handling() -> None:
             },
         )
         assert post_res.status_code == 404
-

@@ -1,6 +1,7 @@
 """Unit tests for task Pydantic schemas."""
 
 from uuid import uuid4
+
 import pytest
 from pydantic import ValidationError
 
@@ -82,4 +83,3 @@ class TestTaskSchemas:
 
         with pytest.raises(ValidationError):
             TaskExtendRequest(additional_minutes=0)
-

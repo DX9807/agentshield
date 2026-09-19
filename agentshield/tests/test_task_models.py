@@ -1,6 +1,6 @@
 """Unit tests for task domain models."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from agentshield.domain.task.models import (
@@ -31,7 +31,7 @@ class TestTaskModels:
 
     def test_task_lifecycle_properties(self) -> None:
         """Test task is_active and is_expired properties."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         task = Task(
             agent_id=uuid4(),
             user_id="alice",
@@ -56,7 +56,7 @@ class TestTaskModels:
             user_id="bob",
             intent_type="execute_query",
             status=TaskStatus.ACTIVE,
-            expires_at=datetime.now(timezone.utc) + timedelta(minutes=30),
+            expires_at=datetime.now(UTC) + timedelta(minutes=30),
         )
         task.complete()
         assert task.status == TaskStatus.COMPLETED
@@ -70,7 +70,7 @@ class TestTaskModels:
             user_id="charlie",
             intent_type="download_file",
             status=TaskStatus.ACTIVE,
-            expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
+            expires_at=datetime.now(UTC) + timedelta(minutes=15),
         )
         task.revoke()
         assert task.status == TaskStatus.REVOKED
@@ -79,7 +79,7 @@ class TestTaskModels:
 
     def test_task_extend(self) -> None:
         """Test extending an active task."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         initial_exp = now + timedelta(minutes=10)
         task = Task(
             agent_id=uuid4(),
@@ -99,7 +99,7 @@ class TestTaskModels:
             user_id="eve",
             intent_type="generate_report",
             status=TaskStatus.ACTIVE,
-            expires_at=datetime.now(timezone.utc) + timedelta(minutes=10),
+            expires_at=datetime.now(UTC) + timedelta(minutes=10),
             context={"report_format": "pdf", "max_rows": 100},
         )
         assert task.has_context_key("report_format") is True
@@ -130,4 +130,3 @@ class TestTaskModels:
         )
         assert log.field == "priority"
         assert log.changed_by == "admin"
-

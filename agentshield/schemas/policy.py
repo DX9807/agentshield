@@ -1,65 +1,62 @@
-"""Policy schemas for API requests/responses."""
-
 from datetime import datetime
-from typing import Optional, List, Dict, Any, Union
+from typing import Any
 from uuid import UUID
-from pydantic import BaseModel, Field, ConfigDict, validator
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ..domain.policy.models import PolicyDecision
 
 
 class PolicyCondition(BaseModel):
     """Policy condition model."""
-    
+
     field: str = Field(..., description="Field path in dot notation (e.g., 'agent.risk_level')")
-    operator: str = Field(..., description="Comparison operator: eq, neq, gt, gte, lt, lte, in, contains, regex")
+    operator: str = Field(
+        ..., description="Comparison operator: eq, neq, gt, gte, lt, lte, in, contains, regex"
+    )
     value: Any = Field(..., description="Expected value to compare against")
-    
+
     model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "field": "request.amount",
-                "operator": "lte",
-                "value": 5000
-            }
-        }
+        json_schema_extra={"example": {"field": "request.amount", "operator": "lte", "value": 5000}}
     )
 
 
 class PolicyCreate(BaseModel):
     """Schema for creating a policy."""
-    
+
     name: str = Field(..., min_length=3, max_length=255)
-    description: Optional[str] = None
+    description: str | None = None
     version: str = "1.0"
-    
-    agent_id: Optional[UUID] = None
-    agent_name: Optional[str] = None
+
+    agent_id: UUID | None = None
+    agent_name: str | None = None
     action: str = Field(..., min_length=1, max_length=100)
-    resource_type: Optional[str] = None
-    
+    resource_type: str | None = None
+
     decision: PolicyDecision
     priority: int = Field(100, ge=1, le=1000)
-    order: Optional[int] = Field(None, ge=1, le=100)
+    order: int | None = Field(None, ge=1, le=100)
     enabled: bool = True
-    
-    conditions: Optional[List[PolicyCondition]] = None
-    metadata: Optional[Dict[str, Any]] = None
-    
-    @validator("name")
-    def validate_name(cls, v):
+
+    conditions: list[PolicyCondition] | None = None
+    metadata: dict[str, Any] | None = None
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
         """Validate policy name."""
         if not v.strip():
             raise ValueError("Name cannot be empty")
         return v.strip()
-    
-    @validator("decision")
-    def validate_decision(cls, v):
+
+    @field_validator("decision")
+    @classmethod
+    def validate_decision(cls, v: PolicyDecision) -> PolicyDecision:
         """Validate decision."""
         if v not in PolicyDecision:
             raise ValueError(f"Invalid decision: {v}")
         return v
-    
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -74,7 +71,7 @@ class PolicyCreate(BaseModel):
                     {"field": "request.amount", "operator": "lte", "value": 5000},
                     {"field": "context.customer_id", "operator": "eq", "value": "CUST-123"},
                 ],
-                "metadata": {"created_by": "security-team", "version": "1.0"}
+                "metadata": {"created_by": "security-team", "version": "1.0"},
             }
         }
     )
@@ -82,24 +79,24 @@ class PolicyCreate(BaseModel):
 
 class PolicyUpdate(BaseModel):
     """Schema for updating a policy."""
-    
-    name: Optional[str] = Field(None, min_length=3, max_length=255)
-    description: Optional[str] = None
-    version: Optional[str] = None
-    
-    agent_id: Optional[UUID] = None
-    agent_name: Optional[str] = None
-    action: Optional[str] = Field(None, min_length=1, max_length=100)
-    resource_type: Optional[str] = None
-    
-    decision: Optional[PolicyDecision] = None
-    priority: Optional[int] = Field(None, ge=1, le=1000)
-    order: Optional[int] = Field(None, ge=1, le=100)
-    enabled: Optional[bool] = None
-    
-    conditions: Optional[List[PolicyCondition]] = None
-    metadata: Optional[Dict[str, Any]] = None
-    
+
+    name: str | None = Field(None, min_length=3, max_length=255)
+    description: str | None = None
+    version: str | None = None
+
+    agent_id: UUID | None = None
+    agent_name: str | None = None
+    action: str | None = Field(None, min_length=1, max_length=100)
+    resource_type: str | None = None
+
+    decision: PolicyDecision | None = None
+    priority: int | None = Field(None, ge=1, le=1000)
+    order: int | None = Field(None, ge=1, le=100)
+    enabled: bool | None = None
+
+    conditions: list[PolicyCondition] | None = None
+    metadata: dict[str, Any] | None = None
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -108,7 +105,7 @@ class PolicyUpdate(BaseModel):
                 "enabled": True,
                 "conditions": [
                     {"field": "request.amount", "operator": "lte", "value": 1000},
-                ]
+                ],
             }
         }
     )
@@ -116,55 +113,55 @@ class PolicyUpdate(BaseModel):
 
 class PolicyResponse(BaseModel):
     """Schema for policy response."""
-    
+
     id: UUID
     name: str
-    description: Optional[str]
-    version: str
-    
-    agent_id: Optional[UUID]
-    agent_name: Optional[str]
+    description: str | None = None
+    version: str = "1.0"
+
+    agent_id: UUID | None = None
+    agent_name: str | None = None
     action: str
-    resource_type: Optional[str]
-    
+    resource_type: str | None = None
+
     decision: PolicyDecision
-    priority: int
-    order: Optional[int]
-    enabled: bool
-    
-    conditions: Optional[List[PolicyCondition]]
-    metadata: Optional[Dict[str, Any]]
-    
+    priority: int = 100
+    order: int | None = None
+    enabled: bool = True
+
+    conditions: list[PolicyCondition] | None = None
+    metadata: dict[str, Any] | None = None
+
     created_at: datetime
     updated_at: datetime
-    created_by: Optional[str]
-    updated_by: Optional[str]
-    
+    created_by: str | None = None
+    updated_by: str | None = None
+
     model_config = ConfigDict(from_attributes=True)
 
 
 class PolicyListResponse(BaseModel):
     """Response for listing policies."""
-    
-    items: List[PolicyResponse]
+
+    items: list[PolicyResponse]
     total: int
     page: int = 1
     limit: int = 20
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
 class PolicyEvaluationRequest(BaseModel):
     """Request for evaluating a policy."""
-    
+
     agent_id: UUID
     task_id: UUID
     action: str
-    resource: Optional[str] = None
-    method: Optional[str] = None
-    path: Optional[str] = None
-    request_data: Optional[Dict[str, Any]] = None
-    
+    resource: str | None = None
+    method: str | None = None
+    path: str | None = None
+    request_data: dict[str, Any] | None = None
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -174,11 +171,7 @@ class PolicyEvaluationRequest(BaseModel):
                 "resource": "/api/refunds",
                 "method": "POST",
                 "path": "/api/refunds",
-                "request_data": {
-                    "amount": 5000,
-                    "customer_id": "CUST-123",
-                    "order_id": "ORD-789"
-                }
+                "request_data": {"amount": 5000, "customer_id": "CUST-123", "order_id": "ORD-789"},
             }
         }
     )
@@ -186,12 +179,12 @@ class PolicyEvaluationRequest(BaseModel):
 
 class PolicyEvaluationResponse(BaseModel):
     """Response for policy evaluation."""
-    
+
     decision: PolicyDecision
-    matched_policy_id: Optional[UUID]
-    matched_policy_name: Optional[str]
+    matched_policy_id: UUID | None = None
+    matched_policy_name: str | None = None
     reason: str
-    risk_score: Optional[int] = None
-    conditions_evaluated: Optional[List[Dict[str, Any]]] = None
-    
+    risk_score: int | None = None
+    conditions_evaluated: list[dict[str, Any]] | None = None
+
     model_config = ConfigDict(from_attributes=True)

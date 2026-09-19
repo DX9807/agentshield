@@ -10,6 +10,7 @@ from agentshield.core.config import settings
 from agentshield.infrastructure.database.base import Base
 import agentshield.domain.agent.models  # noqa: F401
 import agentshield.domain.task.models  # noqa: F401
+import agentshield.domain.policy.models  # noqa: F401
 
 # This is the Alembic Config object
 config = context.config
