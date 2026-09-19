@@ -123,6 +123,7 @@ class BlockedRequestError(AgentShieldError):
     """Request blocked by security policy."""
 
     def __init__(self, reason: str, risk_score: int, details: dict[str, Any] | None = None):
+        self.risk_score = risk_score
         super().__init__(
             message=f"Request blocked: {reason}",
             code="BLOCKED_REQUEST",

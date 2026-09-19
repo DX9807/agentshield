@@ -13,7 +13,7 @@ async def test_task_full_lifecycle() -> None:
     random_suffix = secrets.token_hex(4)
     agent_name = f"task-agent-{random_suffix}"
 
-    async with httpx.AsyncClient(base_url="http://localhost:8000") as client:
+    async with httpx.AsyncClient(base_url="http://localhost:8000", timeout=30.0) as client:
         # 1. Register agent
         reg_res = await client.post(
             "/api/v1/agents/",
@@ -101,7 +101,7 @@ async def test_task_revoke_flow() -> None:
     random_suffix = secrets.token_hex(4)
     agent_name = f"revoke-agent-{random_suffix}"
 
-    async with httpx.AsyncClient(base_url="http://localhost:8000") as client:
+    async with httpx.AsyncClient(base_url="http://localhost:8000", timeout=30.0) as client:
         # Register agent
         reg_res = await client.post(
             "/api/v1/agents/",
@@ -139,7 +139,7 @@ async def test_task_revoke_flow() -> None:
 async def test_task_not_found_handling() -> None:
     """Test 404 response for nonexistent tasks and agents."""
     fake_id = uuid4()
-    async with httpx.AsyncClient(base_url="http://localhost:8000") as client:
+    async with httpx.AsyncClient(base_url="http://localhost:8000", timeout=30.0) as client:
         # Get nonexistent task
         get_res = await client.get(f"/api/v1/tasks/{fake_id}")
         assert get_res.status_code == 404

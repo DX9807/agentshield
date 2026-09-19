@@ -12,10 +12,13 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 
 from .api.v1 import (
-                        agents, capabilities, 
-                        health, policies, tasks, 
-                        gateway,
-                    )
+    agents,
+    capabilities,
+    gateway,
+    health,
+    policies,
+    tasks,
+)
 from .core.config import settings
 from .core.exceptions import AgentShieldError
 from .core.logging import get_logger, setup_logging
@@ -168,6 +171,7 @@ app.include_router(
     gateway.router,
     prefix=settings.API_PREFIX,
 )
+
 
 # Root endpoint
 @app.get("/")

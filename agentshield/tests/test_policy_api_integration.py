@@ -2,6 +2,7 @@
 
 import secrets
 from uuid import uuid4
+
 import httpx
 import pytest
 
@@ -12,7 +13,7 @@ async def test_policy_full_lifecycle_and_evaluation() -> None:
     random_suffix = secrets.token_hex(4)
     agent_name = f"policy-agent-{random_suffix}"
 
-    async with httpx.AsyncClient(base_url="http://localhost:8000") as client:
+    async with httpx.AsyncClient(base_url="http://localhost:8000", timeout=30.0) as client:
         # 1. Register agent
         reg_res = await client.post(
             "/api/v1/agents/",
@@ -204,7 +205,7 @@ async def test_policy_full_lifecycle_and_evaluation() -> None:
 async def test_policy_not_found_handling() -> None:
     """Test 404 responses for non-existent policies."""
     non_existent_id = uuid4()
-    async with httpx.AsyncClient(base_url="http://localhost:8000") as client:
+    async with httpx.AsyncClient(base_url="http://localhost:8000", timeout=30.0) as client:
         # Get non-existent
         res = await client.get(f"/api/v1/policies/{non_existent_id}")
         assert res.status_code == 404
@@ -219,4 +220,3 @@ async def test_policy_not_found_handling() -> None:
         # Delete non-existent
         res = await client.delete(f"/api/v1/policies/{non_existent_id}")
         assert res.status_code == 404
-

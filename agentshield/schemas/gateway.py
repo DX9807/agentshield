@@ -1,22 +1,27 @@
-"""Gateway schemas for API requests/responses."""
+"""
+Gateway schemas for API requests/responses.
+"""
 
-from typing import Optional, Dict, Any, List
+from typing import Any
 from uuid import UUID
-from pydantic import BaseModel, Field, ConfigDict, HttpUrl
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class GatewayForwardRequest(BaseModel):
-    """Request to forward through gateway."""
-    
+    """
+    Request to forward through gateway.
+    """
+
     agent_id: UUID
     api_key: str = Field(..., min_length=10)
     task_id: UUID
     target_url: str = Field(..., description="Target API URL")
     method: str = Field(..., description="HTTP method")
-    headers: Optional[Dict[str, str]] = None
-    query_params: Optional[Dict[str, str]] = None
-    body: Optional[Dict[str, Any]] = None
-    
+    headers: dict[str, str] | None = None
+    query_params: dict[str, str] | None = None
+    body: dict[str, Any] | None = None
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -33,24 +38,28 @@ class GatewayForwardRequest(BaseModel):
 
 
 class GatewayResponse(BaseModel):
-    """Gateway response."""
-    
+    """
+    Gateway response.
+    """
+
     request_id: str
     decision: str  # ALLOW, BLOCK, REQUIRE_APPROVAL, REDACT
     reason: str
     risk_score: int
-    response: Optional[Dict[str, Any]] = None
+    response: dict[str, Any] | None = None
     elapsed_ms: int
-    error: Optional[str] = None
-    
+    error: str | None = None
+
     model_config = ConfigDict(from_attributes=True)
 
 
 class GatewayBatchRequest(BaseModel):
-    """Batch request for multiple evaluations."""
-    
-    requests: List[GatewayForwardRequest]
-    
+    """
+    Batch request for multiple evaluations.
+    """
+
+    requests: list[GatewayForwardRequest]
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -69,11 +78,14 @@ class GatewayBatchRequest(BaseModel):
 
 
 class GatewayBatchResponse(BaseModel):
-    """Batch response."""
-    
-    responses: List[GatewayResponse]
+    """
+    Batch response.
+    """
+
+    responses: list[GatewayResponse]
     total: int
     allowed: int
     blocked: int
-    
+    require_approval: int = 0
+
     model_config = ConfigDict(from_attributes=True)

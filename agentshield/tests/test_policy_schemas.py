@@ -1,6 +1,7 @@
 """Unit tests for policy schemas."""
 
 from uuid import uuid4
+
 import pytest
 from pydantic import ValidationError
 
@@ -10,8 +11,6 @@ from agentshield.schemas.policy import (
     PolicyCreate,
     PolicyEvaluationRequest,
     PolicyEvaluationResponse,
-    PolicyListResponse,
-    PolicyResponse,
     PolicyUpdate,
 )
 
@@ -42,9 +41,7 @@ class TestPolicySchemas:
             priority=25,
             order=1,
             enabled=True,
-            conditions=[
-                PolicyCondition(field="request.amount", operator="gt", value=10000)
-            ],
+            conditions=[PolicyCondition(field="request.amount", operator="gt", value=10000)],
             metadata={"department": "finance"},
         )
         assert policy_in.name == "financial-transfer-policy"  # Stripped
@@ -124,4 +121,3 @@ class TestPolicySchemas:
         assert eval_res.matched_policy_id == policy_id
         assert eval_res.matched_policy_name == "auto-refund-under-50"
         assert eval_res.risk_score == 20
-

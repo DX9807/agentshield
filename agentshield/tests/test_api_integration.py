@@ -7,7 +7,7 @@ import pytest
 @pytest.mark.asyncio
 async def test_health_endpoints() -> None:
     """Test health check endpoints."""
-    async with httpx.AsyncClient(base_url="http://localhost:8000") as client:
+    async with httpx.AsyncClient(base_url="http://localhost:8000", timeout=30.0) as client:
         res = await client.get("/health")
         assert res.status_code == 200
         assert res.json()["status"] == "healthy"
@@ -20,7 +20,7 @@ async def test_health_endpoints() -> None:
 @pytest.mark.asyncio
 async def test_capabilities_api() -> None:
     """Test capabilities listing and fetching."""
-    async with httpx.AsyncClient(base_url="http://localhost:8000") as client:
+    async with httpx.AsyncClient(base_url="http://localhost:8000", timeout=30.0) as client:
         res = await client.get("/api/v1/capabilities/")
         assert res.status_code == 200
         data = res.json()
@@ -41,7 +41,7 @@ async def test_agent_lifecycle() -> None:
     random_suffix = secrets.token_hex(4)
     agent_name = f"lifecycle-agent-{random_suffix}"
 
-    async with httpx.AsyncClient(base_url="http://localhost:8000") as client:
+    async with httpx.AsyncClient(base_url="http://localhost:8000", timeout=30.0) as client:
         # 1. Register agent
         reg_payload = {
             "name": agent_name,

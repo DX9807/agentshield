@@ -111,8 +111,13 @@ class TestPolicyModels:
             ],
         )
 
-        assert policy.evaluate_conditions({"environment": "dev", "ip_address": "192.168.1.5"}) is True
-        assert policy.evaluate_conditions({"environment": "prod", "ip_address": "192.168.1.5"}) is False
+        assert (
+            policy.evaluate_conditions({"environment": "dev", "ip_address": "192.168.1.5"}) is True
+        )
+        assert (
+            policy.evaluate_conditions({"environment": "prod", "ip_address": "192.168.1.5"})
+            is False
+        )
         assert policy.evaluate_conditions({"environment": "dev", "ip_address": "10.0.0.1"}) is False
 
     def test_evaluate_conditions_string_operators(self) -> None:
@@ -189,4 +194,3 @@ class TestPolicyModels:
         assert violation.action == "delete_db"
         assert violation.severity == "critical"
         assert violation.resolved is False
-
