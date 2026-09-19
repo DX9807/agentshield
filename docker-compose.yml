@@ -191,6 +191,75 @@ services:
     networks:
       - agentshield-network
 
+  # Add to docker-compose.yml services section:
+
+  # Attack Lab Services
+  customer-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.attack_lab
+    container_name: agentshield-customer-api
+    ports:
+      - "8001:8001"
+    command: python -m agentshield.attack_lab.services.customer_api
+    networks:
+      - agentshield-network
+
+  order-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.attack_lab
+    container_name: agentshield-order-api
+    ports:
+      - "8002:8002"
+    command: python -m agentshield.attack_lab.services.order_api
+    networks:
+      - agentshield-network
+
+  refund-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.attack_lab
+    container_name: agentshield-refund-api
+    ports:
+      - "8003:8003"
+    command: python -m agentshield.attack_lab.services.refund_api
+    networks:
+      - agentshield-network
+
+  admin-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.attack_lab
+    container_name: agentshield-admin-api
+    ports:
+      - "8004:8004"
+    command: python -m agentshield.attack_lab.services.admin_api
+    networks:
+      - agentshield-network
+
+  payroll-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.attack_lab
+    container_name: agentshield-payroll-api
+    ports:
+      - "8005:8005"
+    command: python -m agentshield.attack_lab.services.payroll_api
+    networks:
+      - agentshield-network
+
+  iam-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.attack_lab
+    container_name: agentshield-iam-api
+    ports:
+      - "8006:8006"
+    command: python -m agentshield.attack_lab.services.iam_api
+    networks:
+      - agentshield-network
+
 volumes:
   postgres_data:
   redis_data:
