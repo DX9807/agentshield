@@ -11,11 +11,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 
-from .api.v1 import agents, capabilities, health, tasks, policies
+from .api.v1 import agents, capabilities, health, policies, tasks
 from .core.config import settings
 from .core.exceptions import AgentShieldError
 from .core.logging import get_logger, setup_logging
 from .domain.agent import models as agent_models  # noqa: F401
+from .domain.policy import models as policy_models  # noqa: F401
 from .domain.task import models as task_models  # noqa: F401
 from .infrastructure.cache.redis_client import redis_client
 from .infrastructure.database.session import db_manager
