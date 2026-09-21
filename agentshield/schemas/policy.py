@@ -14,10 +14,20 @@ class PolicyCondition(BaseModel):
     operator: str = Field(
         ..., description="Comparison operator: eq, neq, gt, gte, lt, lte, in, contains, regex"
     )
-    value: Any = Field(..., description="Expected value to compare against")
+    value: Any | None = Field(default=None, description="Expected value to compare against")
+    value_field: str | None = Field(
+        default=None,
+        description="Field path in context for dynamic comparison (e.g., 'task.context.customer_id')",
+    )
 
     model_config = ConfigDict(
-        json_schema_extra={"example": {"field": "request.amount", "operator": "lte", "value": 5000}}
+        json_schema_extra={
+            "example": {
+                "field": "request.amount",
+                "operator": "lte",
+                "value": 5000,
+            }
+        }
     )
 
 

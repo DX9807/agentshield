@@ -103,7 +103,10 @@ class Policy(BaseModel, AuditMixin):
         """
         field = condition.get("field")
         operator = condition.get("operator")
-        expected_value = condition.get("value")
+        if "value_field" in condition and condition["value_field"] is not None:
+            expected_value = self._get_nested_value(context, condition["value_field"])
+        else:
+            expected_value = condition.get("value")
 
         if not field or not operator:
             return True  # Skip invalid conditions
@@ -139,12 +142,16 @@ class Policy(BaseModel, AuditMixin):
         # Handle None values
         if actual is None and expected is not None:
             return False
+        if actual is not None and expected is None:
+            return False
+        if actual is None and expected is None:
+            return operator in ("eq", "lte", "gte")
 
         # Convert types for comparison
         if expected is not None:
             try:
                 # Try to convert actual to expected type
-                if isinstance(expected, int | float):
+                if isinstance(expected, int | float) and not isinstance(expected, bool):
                     actual = float(actual)
                 elif isinstance(expected, bool):
                     actual = bool(actual)
@@ -164,9 +171,15 @@ class Policy(BaseModel, AuditMixin):
             "lte": lambda a, e: a <= e,
             "in": lambda a, e: a in e if isinstance(e, list) else False,
             "not_in": lambda a, e: a not in e if isinstance(e, list) else True,
-            "contains": lambda a, e: e in a if isinstance(a, str) else False,
-            "startswith": lambda a, e: a.startswith(e) if isinstance(a, str) else False,
-            "endswith": lambda a, e: a.endswith(e) if isinstance(a, str) else False,
+            "contains": lambda a, e: (
+                e in a if isinstance(a, str | list) and e is not None else False
+            ),
+            "startswith": lambda a, e: (
+                a.startswith(str(e)) if isinstance(a, str) and e is not None else False
+            ),
+            "endswith": lambda a, e: (
+                a.endswith(str(e)) if isinstance(a, str) and e is not None else False
+            ),
             "regex": lambda a, e: self._regex_match(a, e),
         }
 

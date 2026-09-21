@@ -1,7 +1,6 @@
-"""
-AgentShield FastAPI application entry point.
-"""
+"""AgentShield FastAPI application entry point."""
 
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 
@@ -9,24 +8,21 @@ import uvicorn
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
-from .api.v1 import (
-    agents,
-    capabilities,
-    gateway,
-    health,
-    policies,
-    tasks,
-)
+from .api.middleware.metrics import MetricsMiddleware
+from .api.v1 import agents, capabilities, gateway, health, policies, tasks
 from .core.config import settings
 from .core.exceptions import AgentShieldError
 from .core.logging import get_logger, setup_logging
-from .domain.agent import models as agent_models  # noqa: F401
-from .domain.policy import models as policy_models  # noqa: F401
-from .domain.task import models as task_models  # noqa: F401
 from .infrastructure.cache.redis_client import redis_client
 from .infrastructure.database.session import db_manager
+from .infrastructure.metrics.prometheus import (
+    get_metrics,
+    update_gateway_health,
+    update_system_info,
+)
+from .infrastructure.tracing.opentelemetry import setup_tracing
 
 # Setup logging
 setup_logging()
@@ -35,12 +31,16 @@ logger = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Lifespan context manager for startup and shutdown.
-    """
+    """Lifespan context manager for startup and shutdown."""
+    startup_time = time.time()
+
     # Startup
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     logger.info(f"Environment: {settings.APP_ENV}")
+
+    # Update system info
+    update_system_info(settings.APP_VERSION, settings.APP_ENV)
+    update_gateway_health(True)
 
     # Initialize database
     try:
@@ -48,6 +48,7 @@ async def lifespan(app: FastAPI):
         logger.info("Database initialized")
     except Exception as e:
         logger.error(f"Database initialization failed: {e}")
+        update_gateway_health(False)
         raise
 
     # Connect to Redis
@@ -58,10 +59,14 @@ async def lifespan(app: FastAPI):
         logger.error(f"Redis connection failed: {e}")
         # Continue without Redis (non-critical for startup)
 
+    # Setup OpenTelemetry
+    setup_tracing(app)
+
     yield
 
     # Shutdown
     logger.info("Shutting down...")
+    update_gateway_health(False)
 
     # Disconnect Redis
     await redis_client.disconnect()
@@ -69,7 +74,9 @@ async def lifespan(app: FastAPI):
     # Dispose database connections
     await db_manager.dispose()
 
-    logger.info("Shutdown complete")
+    # Log uptime
+    uptime = time.time() - startup_time
+    logger.info(f"Shutdown complete. Uptime: {uptime:.2f} seconds")
 
 
 # Create FastAPI application
@@ -83,6 +90,8 @@ app = FastAPI(
 )
 
 # Add middleware
+app.add_middleware(MetricsMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -96,13 +105,10 @@ app.add_middleware(
     allowed_hosts=["*"],  # Configure appropriately in production
 )
 
-
 # Exception handlers
 @app.exception_handler(AgentShieldError)
 async def agentshield_exception_handler(request: Request, exc: AgentShieldError):
-    """
-    Handle AgentShield-specific exceptions.
-    """
+    """Handle AgentShield-specific exceptions."""
     logger.warning(
         f"AgentShield error: {exc.code} - {exc.message}",
         extra={
@@ -124,9 +130,7 @@ async def agentshield_exception_handler(request: Request, exc: AgentShieldError)
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
-    """
-    Handle generic exceptions.
-    """
+    """Handle generic exceptions."""
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -144,41 +148,76 @@ app.include_router(
     prefix=settings.API_PREFIX,
     tags=["Health"],
 )
-app.include_router(
-    health.router,
-    tags=["Health"],
-)
+
 app.include_router(
     agents.router,
     prefix=settings.API_PREFIX,
-)
-app.include_router(
-    capabilities.router,
-    prefix=settings.API_PREFIX,
+    tags=["Agents"],
 )
 
 app.include_router(
     tasks.router,
     prefix=settings.API_PREFIX,
+    tags=["Tasks"],
 )
 
 app.include_router(
     policies.router,
     prefix=settings.API_PREFIX,
+    tags=["Policies"],
+)
+
+app.include_router(
+    capabilities.router,
+    prefix=settings.API_PREFIX,
+    tags=["Capabilities"],
 )
 
 app.include_router(
     gateway.router,
     prefix=settings.API_PREFIX,
+    tags=["Gateway"],
 )
+
+
+# Health check endpoints at root level for Docker and Kubernetes health checks
+@app.get("/health", tags=["Health"])
+async def root_health():
+    """Root health check."""
+    return {
+        "status": "healthy",
+        "service": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "environment": settings.APP_ENV,
+    }
+
+
+@app.get("/ready", tags=["Health"])
+async def root_ready():
+    """Root readiness check."""
+    return {"status": "ready"}
+
+
+@app.get("/live", tags=["Health"])
+async def root_live():
+    """Root liveness check."""
+    return {"status": "alive"}
+
+
+# Metrics endpoint
+@app.get("/metrics")
+async def metrics_endpoint():
+    """Prometheus metrics endpoint."""
+    return Response(
+        content=await get_metrics(),
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
 
 
 # Root endpoint
 @app.get("/")
 async def root():
-    """
-    Root endpoint.
-    """
+    """Root endpoint."""
     return {
         "service": settings.APP_NAME,
         "version": settings.APP_VERSION,
@@ -188,9 +227,7 @@ async def root():
 
 
 def main():
-    """
-    Entry point for running the application.
-    """
+    """Entry point for running the application."""
     uvicorn.run(
         "agentshield.main:app",
         host="0.0.0.0",

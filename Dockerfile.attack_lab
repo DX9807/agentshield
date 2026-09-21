@@ -1,0 +1,14 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+ENV PYTHONPATH=/app
+
+EXPOSE 8001-8006
+
+CMD ["python", "-m", "agentshield.attack_lab.services.customer_api"]

@@ -1,6 +1,7 @@
 """Unit tests for Gateway schemas."""
 
 from uuid import uuid4
+
 import pytest
 from pydantic import ValidationError
 
@@ -91,4 +92,3 @@ class TestGatewaySchemas:
         assert batch_res.total == 1
         assert batch_res.allowed == 1
         assert batch_res.blocked == 0
-

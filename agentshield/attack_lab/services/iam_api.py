@@ -1,9 +1,10 @@
 """Mock IAM API."""
 
+import uuid
+from datetime import UTC, datetime
+
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
-from typing import Optional
-import uuid
 
 app = FastAPI(title="Mock IAM API", version="1.0.0")
 
@@ -15,7 +16,7 @@ class UserCreate(BaseModel):
     username: str
     email: str
     role: str
-    department: Optional[str] = None
+    department: str | None = None
 
 
 @app.post("/iam/users")
@@ -28,13 +29,13 @@ async def create_user(user: UserCreate):
         "email": user.email,
         "role": user.role,
         "department": user.department,
-        "created_at": datetime.utcnow().isoformat()
+        "created_at": datetime.now(UTC).isoformat(),
     }
     USERS[user_id] = new_user
-    
+
     return {
         "status": "created",
-        "user": new_user
+        "user": new_user,
     }
 
 
@@ -50,7 +51,7 @@ async def get_user(user_id: str):
     if user_id not in USERS:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User {user_id} not found"
+            detail=f"User {user_id} not found",
         )
     return USERS[user_id]
 
@@ -61,7 +62,7 @@ async def delete_user(user_id: str):
     if user_id not in USERS:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User {user_id} not found"
+            detail=f"User {user_id} not found",
         )
     del USERS[user_id]
     return {"status": "deleted", "user_id": user_id}
@@ -73,10 +74,16 @@ async def update_user_role(user_id: str, role: str):
     if user_id not in USERS:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User {user_id} not found"
+            detail=f"User {user_id} not found",
         )
     USERS[user_id]["role"] = role
     return {"status": "updated", "user": USERS[user_id]}
+
+
+@app.get("/health")
+async def health():
+    """Health check."""
+    return {"status": "healthy", "service": "IAM API"}
 
 
 @app.get("/")
@@ -86,5 +93,5 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    from datetime import datetime
+
     uvicorn.run(app, host="0.0.0.0", port=8006)

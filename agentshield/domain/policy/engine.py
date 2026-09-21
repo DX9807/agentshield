@@ -217,9 +217,19 @@ class PolicyEngine:
             },
         }
 
-        # Merge additional context
+        # Merge additional context deeply
         if context:
-            eval_context.update(context)
+            for k, v in context.items():
+                if k == "request" and isinstance(v, dict):
+                    eval_context["request"].update(v)
+                    if "data" not in eval_context["request"] or not eval_context["request"]["data"]:
+                        eval_context["request"]["data"] = v.get("body") or request.request_data or {}
+                    if "body" not in eval_context["request"]:
+                        eval_context["request"]["body"] = eval_context["request"]["data"]
+                elif isinstance(v, dict) and k in eval_context and isinstance(eval_context[k], dict):
+                    eval_context[k].update(v)
+                else:
+                    eval_context[k] = v
 
         return eval_context
 

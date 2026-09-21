@@ -2,8 +2,6 @@
 
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
 
 app = FastAPI(title="Mock Order API", version="1.0.0")
 
@@ -15,7 +13,7 @@ ORDERS = {
         "total": 150.00,
         "status": "delivered",
         "items": ["Item-001", "Item-002"],
-        "created_at": "2024-01-01T00:00:00Z"
+        "created_at": "2024-01-01T00:00:00Z",
     },
     "ORD-002": {
         "id": "ORD-002",
@@ -23,7 +21,7 @@ ORDERS = {
         "total": 75.50,
         "status": "pending",
         "items": ["Item-003"],
-        "created_at": "2024-01-02T00:00:00Z"
+        "created_at": "2024-01-02T00:00:00Z",
     },
     "ORD-003": {
         "id": "ORD-003",
@@ -31,8 +29,8 @@ ORDERS = {
         "total": 230.00,
         "status": "delivered",
         "items": ["Item-004", "Item-005", "Item-006"],
-        "created_at": "2024-01-03T00:00:00Z"
-    }
+        "created_at": "2024-01-03T00:00:00Z",
+    },
 }
 
 
@@ -56,8 +54,7 @@ async def get_order(order_id: str):
     """Get order by ID."""
     if order_id not in ORDERS:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Order {order_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Order {order_id} not found"
         )
     return ORDERS[order_id]
 
@@ -69,6 +66,12 @@ async def get_customer_orders(customer_id: str):
     return {"items": customer_orders, "total": len(customer_orders)}
 
 
+@app.get("/health")
+async def health():
+    """Health check."""
+    return {"status": "healthy", "service": "Order API"}
+
+
 @app.get("/")
 async def root():
     return {"service": "Order API", "version": "1.0.0"}
@@ -76,4 +79,5 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8002)

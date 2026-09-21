@@ -1,10 +1,10 @@
 """Mock Refund API."""
 
+import uuid
+from datetime import datetime
+
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
-from typing import Optional
-from datetime import datetime
-import uuid
 
 app = FastAPI(title="Mock Refund API", version="1.0.0")
 
@@ -17,7 +17,7 @@ class RefundRequest(BaseModel):
     customer_id: str = Field(..., description="Customer ID")
     amount: float = Field(..., gt=0, description="Refund amount")
     reason: str = Field(..., description="Reason for refund")
-    notes: Optional[str] = None
+    notes: str | None = None
 
 
 class RefundResponse(BaseModel):
@@ -28,14 +28,14 @@ class RefundResponse(BaseModel):
     reason: str
     status: str
     created_at: str
-    processed_at: Optional[str] = None
+    processed_at: str | None = None
 
 
 @app.post("/refunds")
 async def create_refund(request: RefundRequest):
     """Create a refund."""
     refund_id = f"REF-{uuid.uuid4().hex[:8].upper()}"
-    
+
     refund = {
         "id": refund_id,
         "order_id": request.order_id,
@@ -45,9 +45,9 @@ async def create_refund(request: RefundRequest):
         "notes": request.notes,
         "status": "pending",
         "created_at": datetime.utcnow().isoformat(),
-        "processed_at": None
+        "processed_at": None,
     }
-    
+
     REFUNDS[refund_id] = refund
     return refund
 
@@ -63,8 +63,7 @@ async def get_refund(refund_id: str):
     """Get refund by ID."""
     if refund_id not in REFUNDS:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Refund {refund_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Refund {refund_id} not found"
         )
     return REFUNDS[refund_id]
 
@@ -74,16 +73,21 @@ async def process_refund(refund_id: str):
     """Process a refund."""
     if refund_id not in REFUNDS:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Refund {refund_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Refund {refund_id} not found"
         )
-    
+
     refund = REFUNDS[refund_id]
     refund["status"] = "processed"
     refund["processed_at"] = datetime.utcnow().isoformat()
     REFUNDS[refund_id] = refund
-    
+
     return refund
+
+
+@app.get("/health")
+async def health():
+    """Health check."""
+    return {"status": "healthy", "service": "Refund API"}
 
 
 @app.get("/")
@@ -93,4 +97,5 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8003)

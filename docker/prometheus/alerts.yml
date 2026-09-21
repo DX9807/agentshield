@@ -1,0 +1,83 @@
+groups:
+  - name: agentshield_alerts
+    interval: 30s
+    rules:
+      # High rate of blocked requests
+      - alert: HighBlockRate
+        expr: rate(agentshield_blocked_requests_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High rate of blocked requests"
+          description: "Block rate is {{ $value }} requests/second"
+
+      # High-risk events detected
+      - alert: CriticalRiskEvents
+        expr: rate(agentshield_high_risk_events_total[5m]) > 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High rate of critical risk events"
+          description: "Critical risk rate is {{ $value }} events/second"
+
+      # Gateway latency high
+      - alert: HighGatewayLatency
+        expr: histogram_quantile(0.95, rate(agentshield_request_latency_seconds[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Gateway latency is high"
+          description: "P95 latency is {{ $value }} seconds"
+
+      # Policy evaluation slow
+      - alert: SlowPolicyEvaluation
+        expr: histogram_quantile(0.95, rate(agentshield_policy_evaluation_latency_seconds[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Policy evaluation is slow"
+          description: "P95 policy evaluation is {{ $value }} seconds"
+
+      # Gateway down
+      - alert: GatewayDown
+        expr: agentshield_gateway_health == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Gateway is down"
+          description: "AgentShield gateway is not responding"
+
+      # High risk score average
+      - alert: HighRiskScoreAverage
+        expr: avg(agentshield_risk_score_average) > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High average risk score"
+          description: "Average risk score is {{ $value }}"
+
+      # Rate limit hits
+      - alert: RateLimitHits
+        expr: rate(agentshield_rate_limit_hits_total[5m]) > 20
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Rate limit being hit frequently"
+          description: "Rate limit hits: {{ $value }} per second"
+
+      # Sensitive data detection
+      - alert: SensitiveDataDetected
+        expr: rate(agentshield_sensitive_data_detected_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High rate of sensitive data detection"
+          description: "Sensitive data detections: {{ $value }} per second"

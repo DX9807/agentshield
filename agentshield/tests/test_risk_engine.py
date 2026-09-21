@@ -1,6 +1,7 @@
 """Unit tests for the Risk Scoring Engine."""
 
 import pytest
+
 from agentshield.domain.risk.engine import RiskEngine, RiskLevel
 
 
@@ -86,4 +87,3 @@ class TestRiskEngine:
         assert engine.get_risk_level(30) == RiskLevel.MEDIUM
         assert engine.get_risk_level(29) == RiskLevel.LOW
         assert engine.get_risk_level(0) == RiskLevel.LOW
-

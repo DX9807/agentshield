@@ -187,7 +187,15 @@ class GatewayService:
             )
 
             # Step 16: Update metrics
-            await self._update_metrics(decision, risk_score)
+            elapsed_sec = (datetime.now(UTC) - start_time).total_seconds()
+            req_action = getattr(gateway_request, "action", None) or getattr(gateway_request, "method", "UNKNOWN")
+            await self._update_metrics(
+                decision=decision,
+                risk_score=risk_score,
+                agent_id=str(agent.id) if agent else "unknown",
+                action=req_action,
+                latency=elapsed_sec,
+            )
 
             return GatewayResponse(
                 request_id=request_id,
@@ -195,20 +203,30 @@ class GatewayService:
                 reason=decision["reason"],
                 risk_score=risk_score,
                 response=processed_response,
-                elapsed_ms=int((datetime.now(UTC) - start_time).total_seconds() * 1000),
+                elapsed_ms=int(elapsed_sec * 1000),
             )
 
         except BlockedRequestError as e:
             extracted_risk = getattr(e, "risk_score", None)
             if extracted_risk is None and hasattr(e, "details") and isinstance(e.details, dict):
                 extracted_risk = e.details.get("risk_score")
+            final_risk = extracted_risk or 80
+            elapsed_sec = (datetime.now(UTC) - start_time).total_seconds()
+            req_action = getattr(gateway_request, "action", None) or getattr(gateway_request, "method", "UNKNOWN")
+            await self._update_metrics(
+                decision={"action": "block", "reason": e.message},
+                risk_score=final_risk,
+                agent_id=str(gateway_request.agent_id),
+                action=req_action,
+                latency=elapsed_sec,
+            )
             return GatewayResponse(
                 request_id=request_id,
                 decision="BLOCK",
                 reason=e.message,
-                risk_score=extracted_risk or 80,
+                risk_score=final_risk,
                 response=None,
-                elapsed_ms=int((datetime.now(UTC) - start_time).total_seconds() * 1000),
+                elapsed_ms=int(elapsed_sec * 1000),
                 error=e.message,
             )
         except (
@@ -288,6 +306,7 @@ class GatewayService:
             "path": path,
             "resource": resource,
             "body": body,
+            "data": body,
             "headers": gateway_request.headers,
             "query_params": gateway_request.query_params,
             "target_url": target_url,
@@ -659,6 +678,42 @@ class GatewayService:
             extra=event,
         )
 
-    async def _update_metrics(self, decision: dict[str, Any], risk_score: int) -> None:
+    async def _update_metrics(
+        self,
+        decision: dict[str, Any],
+        risk_score: int,
+        agent_id: str = "unknown",
+        action: str = "unknown",
+        latency: float = 0.0,
+    ) -> None:
         """Update metrics."""
-        pass
+        try:
+            from ...infrastructure.metrics.prometheus import (
+                record_blocked_request,
+                record_request,
+                record_risk_score,
+            )
+
+            dec_action = str(decision.get("action", "allow")).lower()
+            env = getattr(settings, "APP_ENV", "development")
+            record_request(
+                agent_id=agent_id,
+                decision=dec_action,
+                action=action,
+                environment=env,
+                latency=latency,
+            )
+            record_risk_score(
+                agent_id=agent_id,
+                score=risk_score,
+                decision=dec_action,
+            )
+            if dec_action == "block":
+                record_blocked_request(
+                    agent_id=agent_id,
+                    reason=str(decision.get("reason", "unknown")),
+                    severity="high" if risk_score >= 80 else "medium",
+                )
+        except Exception as e:
+            logger.debug(f"Failed to update metrics: {e}")
+
