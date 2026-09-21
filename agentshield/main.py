@@ -1,4 +1,6 @@
-"""AgentShield FastAPI application entry point."""
+"""
+AgentShield FastAPI application entry point.
+"""
 
 import time
 from contextlib import asynccontextmanager
@@ -108,7 +110,9 @@ app.add_middleware(
 # Exception handlers
 @app.exception_handler(AgentShieldError)
 async def agentshield_exception_handler(request: Request, exc: AgentShieldError):
-    """Handle AgentShield-specific exceptions."""
+    """
+    Handle AgentShield-specific exceptions.
+    """
     logger.warning(
         f"AgentShield error: {exc.code} - {exc.message}",
         extra={
@@ -130,7 +134,9 @@ async def agentshield_exception_handler(request: Request, exc: AgentShieldError)
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
-    """Handle generic exceptions."""
+    """
+    Handle generic exceptions.
+    """
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -183,7 +189,9 @@ app.include_router(
 # Health check endpoints at root level for Docker and Kubernetes health checks
 @app.get("/health", tags=["Health"])
 async def root_health():
-    """Root health check."""
+    """
+    Root health check.
+    """
     return {
         "status": "healthy",
         "service": settings.APP_NAME,
@@ -194,20 +202,26 @@ async def root_health():
 
 @app.get("/ready", tags=["Health"])
 async def root_ready():
-    """Root readiness check."""
+    """
+    Root readiness check.
+    """
     return {"status": "ready"}
 
 
 @app.get("/live", tags=["Health"])
 async def root_live():
-    """Root liveness check."""
+    """
+    Root liveness check.
+    """
     return {"status": "alive"}
 
 
 # Metrics endpoint
 @app.get("/metrics")
 async def metrics_endpoint():
-    """Prometheus metrics endpoint."""
+    """
+    Prometheus metrics endpoint.
+    """
     return Response(
         content=await get_metrics(),
         media_type="text/plain; version=0.0.4; charset=utf-8",
@@ -217,7 +231,9 @@ async def metrics_endpoint():
 # Root endpoint
 @app.get("/")
 async def root():
-    """Root endpoint."""
+    """
+    Root endpoint.
+    """
     return {
         "service": settings.APP_NAME,
         "version": settings.APP_VERSION,
@@ -227,7 +243,9 @@ async def root():
 
 
 def main():
-    """Entry point for running the application."""
+    """
+    Entry point for running the application.
+    """
     uvicorn.run(
         "agentshield.main:app",
         host="0.0.0.0",

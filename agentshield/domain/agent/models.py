@@ -25,7 +25,9 @@ from ...infrastructure.database.base import AuditMixin, BaseModel
 
 
 class AgentStatus(str, Enum):
-    """Agent status enum."""
+    """
+    Agent status enum.
+    """
 
     ACTIVE = "active"
     INACTIVE = "inactive"
@@ -34,7 +36,9 @@ class AgentStatus(str, Enum):
 
 
 class AgentRiskLevel(str, Enum):
-    """Agent risk level enum."""
+    """
+    Agent risk level enum.
+    """
 
     LOW = "low"
     MEDIUM = "medium"
@@ -43,7 +47,9 @@ class AgentRiskLevel(str, Enum):
 
 
 class AgentEnvironment(str, Enum):
-    """Agent environment enum."""
+    """
+    Agent environment enum.
+    """
 
     DEVELOPMENT = "development"
     STAGING = "staging"
@@ -51,7 +57,9 @@ class AgentEnvironment(str, Enum):
 
 
 class Agent(BaseModel, AuditMixin):
-    """Agent identity model."""
+    """
+    Agent identity model.
+    """
 
     __tablename__ = "agents"
 
@@ -79,12 +87,16 @@ class Agent(BaseModel, AuditMixin):
 
     @hybrid_property
     def is_active(self) -> bool:
-        """Check if agent is active."""
+        """
+        Check if agent is active.
+        """
         return self.status == AgentStatus.ACTIVE
 
     @hybrid_property
     def is_suspended(self) -> bool:
-        """Check if agent is suspended."""
+        """
+        Check if agent is suspended.
+        """
         return self.status == AgentStatus.SUSPENDED
 
     def __repr__(self) -> str:
@@ -92,7 +104,9 @@ class Agent(BaseModel, AuditMixin):
 
 
 class AgentCredential(BaseModel):
-    """Agent credential (API key) model."""
+    """
+    Agent credential (API key) model.
+    """
 
     __tablename__ = "agent_credentials"
 
@@ -111,7 +125,8 @@ class AgentCredential(BaseModel):
 
     @classmethod
     def generate_api_key(cls) -> tuple[str, str, str]:
-        """Generate a new API key with prefix.
+        """
+        Generate a new API key with prefix.
 
         Returns:
             tuple: (full_api_key, hashed_key, prefix)
@@ -145,7 +160,9 @@ class AgentCredential(BaseModel):
 
 
 class Capability(BaseModel):
-    """Capability model."""
+    """
+    Capability model.
+    """
 
     __tablename__ = "capabilities"
 
@@ -163,7 +180,9 @@ class Capability(BaseModel):
 
 
 class AgentCapability(BaseModel):
-    """Many-to-many relationship between agents and capabilities."""
+    """
+    Many-to-many relationship between agents and capabilities.
+    """
 
     __tablename__ = "agent_capabilities"
 
@@ -190,7 +209,9 @@ class AgentCapability(BaseModel):
 
 # Predefined capabilities
 class PredefinedCapabilities:
-    """Predefined capabilities for common operations."""
+    """
+    Predefined capabilities for common operations.
+    """
 
     # Customer operations
     READ_CUSTOMER = "read_customer"
@@ -226,7 +247,9 @@ class PredefinedCapabilities:
 
     @classmethod
     def get_all(cls) -> list[str]:
-        """Get all predefined capabilities."""
+        """
+        Get all predefined capabilities.
+        """
         return [
             getattr(cls, attr)
             for attr in dir(cls)
@@ -235,7 +258,9 @@ class PredefinedCapabilities:
 
     @classmethod
     def get_sensitive(cls) -> list[str]:
-        """Get sensitive capabilities."""
+        """
+        Get sensitive capabilities.
+        """
         return [
             cls.DELETE_CUSTOMER,
             cls.DELETE_ORDER,
