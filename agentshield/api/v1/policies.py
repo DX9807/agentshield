@@ -1,4 +1,6 @@
-"""Policy API endpoints."""
+"""
+Policy API endpoints.
+"""
 
 from uuid import UUID
 
@@ -25,7 +27,9 @@ router = APIRouter(prefix="/policies", tags=["Policies"])
 
 
 def _to_policy_response(policy: Policy) -> PolicyResponse:
-    """Helper to convert a Policy ORM model to PolicyResponse schema."""
+    """
+    Helper to convert a Policy ORM model to PolicyResponse schema.
+    """
     return PolicyResponse(
         id=policy.id,
         name=policy.name,
